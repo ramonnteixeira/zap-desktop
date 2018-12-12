@@ -19,6 +19,9 @@
     var globalShortcut = require('electron').globalShortcut;
     var ContextMenu = require('electron-context-menu');
 
+    var session = require('electron').session;
+
+
     const isAlreadyRunning = app.makeSingleInstance((argv, workingDir) => {
         if (whatsApp.window) {
             if (whatsApp.window.isMinimized()) {
@@ -519,32 +522,32 @@
                     );
                 }
                 // Checking for new version
-                var ep = "https://api.github.com/repos/Enrico204/Whatsapp-Desktop/releases/latest";
-                log.info("Checking for new versions (current version "+pjson.version+")");
-                request.get({url: ep, headers:{'User-Agent':'Whatsapp-Desktop'}}, function(err, response, body) {
-                    if (!err && response != undefined && response.statusCode == 200) {
-                        var ghinfo = JSON.parse(body);
-                        global.whatsApp.newVersion = ghinfo['tag_name'];
-                        if (ghinfo['tag_name'][0] == 'v'
-                                && ghinfo['tag_name'] != "v"+pjson.version
-                                && ghinfo['tag_name'].indexOf("beta") == -1) {
-                            log.info("A new version is available: " + ghinfo['tag_name']);
-                            var options = {
-                                title: "Whatsapp-Desktop",
-                                message: "A new version is available, download it at https://github.com/Enrico204/Whatsapp-Desktop",
-                                open: 'https://github.com/Enrico204/Whatsapp-Desktop/releases/latest',
-                                sound: true
-                            };
-                            notifier.notify(options, function (err, response) {
-                                    if (!err) log.warn("Error: " + err);
-                                });
-                        } else {
-                            log.info("Already on latest version");
-                        }
-                    } else {
-                        log.warn("Error checking updates (status " + (response != undefined ? response.statusCode : " not available") + "): " + err);
-                    }
-                });
+                // var ep = "https://api.github.com/repos/Enrico204/Whatsapp-Desktop/releases/latest";
+                // log.info("Checking for new versions (current version "+pjson.version+")");
+                // request.get({url: ep, headers:{'User-Agent':'Whatsapp-Desktop'}}, function(err, response, body) {
+                //     if (!err && response != undefined && response.statusCode == 200) {
+                //         var ghinfo = JSON.parse(body);
+                //         global.whatsApp.newVersion = ghinfo['tag_name'];
+                //         if (ghinfo['tag_name'][0] == 'v'
+                //                 && ghinfo['tag_name'] != "v"+pjson.version
+                //                 && ghinfo['tag_name'].indexOf("beta") == -1) {
+                //             log.info("A new version is available: " + ghinfo['tag_name']);
+                //             var options = {
+                //                 title: "Whatsapp-Desktop",
+                //                 message: "A new version is available, download it at https://github.com/Enrico204/Whatsapp-Desktop",
+                //                 open: 'https://github.com/Enrico204/Whatsapp-Desktop/releases/latest',
+                //                 sound: true
+                //             };
+                //             notifier.notify(options, function (err, response) {
+                //                     if (!err) log.warn("Error: " + err);
+                //                 });
+                //         } else {
+                //             log.info("Already on latest version");
+                //         }
+                //     } else {
+                //         log.warn("Error checking updates (status " + (response != undefined ? response.statusCode : " not available") + "): " + err);
+                //     }
+                // });
             });
 
             if (config.get("useProxy")) {
@@ -889,6 +892,12 @@
     }
 
     app.on('ready', () => {
+
+        session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+            details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36';
+            callback({ cancel: false, requestHeaders: details.requestHeaders });
+          });
+                  
         whatsApp.init();
         // setting of globalShortcut
         if(config.get("globalshortcut") == true) {
